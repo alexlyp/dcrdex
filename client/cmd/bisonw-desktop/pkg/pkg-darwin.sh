@@ -8,6 +8,17 @@ set -o pipefail;
 
 export GOWORK=off
 
+[ $(uname) = Darwin ] || {
+	echo "$0 must be run from darwin" 2>&1
+	exit 1
+}
+[ $# = 1 ] || {
+	echo "usage: $0 identity" 2>&1
+	exit 2
+}
+
+IDENTITY=$1
+
 # For release set metadata to "release".
 VER="1.0.0"
 META="release"
@@ -102,7 +113,10 @@ function build_targets() {
 
     pushd ..
     GOOS=${OS} GOARCH=${ARCH} CGO_ENABLED=1 go build -v -trimpath ${TAGS_DEXC:+-tags ${TAGS_DEXC}} -o "${APP_EXCE_DIR}/${APP_NAME}" -ldflags "${LDFLAGS_DEXC:-${LDFLAGS_BASE}}"
-    popd
+    
+	codesign -s ${IDENTITY} --options runtime "${APP_EXCE_DIR}/${APP_NAME}"
+	zip -r ${APP_NAME}.zip "${APP_EXCE_DIR}/${APP_NAME}"
+	popd
 
 	./create-dmg.sh \
 		--volname "${VOLUME_NAME}" \
