@@ -13,11 +13,12 @@ export GOWORK=off
 	exit 1
 }
 [ $# = 1 ] || {
-	echo "usage: $0 identity" 2>&1
+	echo "usage: $0 identity arch" 2>&1
 	exit 2
 }
 
 IDENTITY=$1
+ARCH_ARG=$2
 
 # For release set metadata to "release".
 VER="1.0.0"
@@ -114,8 +115,8 @@ function build_targets() {
     pushd ..
     GOOS=${OS} GOARCH=${ARCH} CGO_ENABLED=1 go build -v -trimpath ${TAGS_DEXC:+-tags ${TAGS_DEXC}} -o "${APP_EXCE_DIR}/${APP_NAME}" -ldflags "${LDFLAGS_DEXC:-${LDFLAGS_BASE}}"
     
-	codesign -s ${IDENTITY} --options runtime "${APP_EXCE_DIR}/${APP_NAME}"
-	zip -r ${APP_NAME}.zip "${APP_EXCE_DIR}/${APP_NAME}"
+	codesign -s ${IDENTITY} --options runtime "${APP_DIR}"
+	zip -r ${TARGET_NAME}.zip "${APP_DIR}"
 	popd
 
 	./create-dmg.sh \
@@ -134,7 +135,7 @@ function build_targets() {
   done
 }
 
-TARGETS="darwin/amd64 darwin/arm64"
+TARGETS="darwin/${ARCH_ARG}"
 FLAVOR="-tray"
 TAGS_DEXC="systray"
 prepare
